@@ -1,0 +1,25 @@
+[project]
+name = "review-server-mcp"
+version = "0.1.0"
+description = "游戏提审服泄漏检测 MCP Server"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+feishu = [
+    "lark-oapi",
+    "requests",
+    "python-dotenv",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
