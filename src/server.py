@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime, timezone
-from pathlib import Path
 
 from fastmcp import FastMCP
 
@@ -22,12 +21,12 @@ config = Config.from_env()
 
 if config.db_type == "sqlite":
     db_path = config.db_path
-    is_new_db = db_path == ":memory:" or not Path(db_path).exists()
     repo = SQLiteRepository(":memory:") if db_path == ":memory:" else create_repository(config)
-    if is_new_db:
-        seed(repo)
 else:
     repo = create_repository(config)
+
+if config.seed_demo_data:
+    seed(repo)
 
 service = LeakDetectionService(repo, config)
 

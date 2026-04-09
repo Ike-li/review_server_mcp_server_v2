@@ -20,6 +20,9 @@ class Config:
     # 评分阈值
     player_count_threshold: int = 20
 
+    # 是否灌入样例数据（仅开发/测试用）
+    seed_demo_data: bool = False
+
     # 维度权重（合计 1.0）
     weights: dict[str, float] = field(default_factory=lambda: {
         "formal_crosscheck": 0.25,
@@ -40,4 +43,5 @@ class Config:
             host=os.getenv("MCP_HOST", "127.0.0.1"),
             port=int(os.getenv("MCP_PORT", "8000")),
             player_count_threshold=int(os.getenv("PLAYER_COUNT_THRESHOLD", "20")),
+            seed_demo_data=os.getenv("SEED_DEMO_DATA", "").lower() in ("1", "true", "yes"),
         )

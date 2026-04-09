@@ -74,3 +74,11 @@ def test_get_player_records_page_offset(repo):
     records, total = repo.get_player_records_page("review-10003-appstore-01", DT, offset=50, limit=10)
     assert total == 55
     assert len(records) == 5
+
+
+def test_formal_crosscheck_excludes_zero_pay(repo):
+    """零付费的正式服账号不应命中交叉校验。"""
+    repo.insert_formal_server_user("10001", "u1_001", 0.0)
+    repo.commit()
+    result = repo.get_formal_crosscheck_uids("10001", ["u1_001"])
+    assert result == []

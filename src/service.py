@@ -40,6 +40,7 @@ class LeakDetectionService:
             server=server,
             dt=dt,
             player_count_threshold=self.config.player_count_threshold,
+            weights=self.config.weights,
         )
         return score, records
 
@@ -140,6 +141,8 @@ class LeakDetectionService:
     def query_detail(
         self, server_id: str, dt: str, page: int = 1, page_size: int = 50
     ) -> dict:
+        page = max(1, page)
+        page_size = max(1, min(page_size, 500))
         offset = (page - 1) * page_size
         page_records, total = self.repo.get_player_records_page(
             server_id, dt, offset=offset, limit=page_size

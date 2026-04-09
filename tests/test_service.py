@@ -72,3 +72,23 @@ def test_query_detail_page_out_of_range(service):
 def test_detect_leak_no_servers(service):
     score = service.detect_leak("99999", "nonexistent", DT)
     assert score.level == "normal"
+
+
+def test_query_detail_negative_page_size(service):
+    """page_size=-1 不应绕过分页限制。"""
+    detail = service.query_detail("review-10003-appstore-01", DT, page=1, page_size=-1)
+    assert detail["page_size"] == 1
+    assert len(detail["records"]) == 1
+
+
+def test_query_detail_negative_page(service):
+    """page=0 或负数应被修正为 1。"""
+    detail = service.query_detail("review-10003-appstore-01", DT, page=0, page_size=10)
+    assert detail["page"] == 1
+    assert len(detail["records"]) == 10
+
+
+def test_query_detail_huge_page_size(service):
+    """page_size 超过上限应被限制为 500。"""
+    detail = service.query_detail("review-10003-appstore-01", DT, page=1, page_size=9999)
+    assert detail["page_size"] == 500

@@ -104,7 +104,7 @@ class SQLiteRepository:
             placeholders = ",".join("?" for _ in batch)
             rows = self._conn.execute(
                 f"SELECT uid FROM formal_server_users "
-                f"WHERE game_id = ? AND uid IN ({placeholders})",
+                f"WHERE game_id = ? AND total_pay > 0 AND uid IN ({placeholders})",
                 [game_id, *batch],
             ).fetchall()
             result.extend(r["uid"] for r in rows)
