@@ -153,6 +153,31 @@ def generate_leak_report(game_id: str, server_id: str, dt: str) -> str:
 
 
 @mcp.tool()
+def send_leak_alert(game_id: str, server_id: str, dt: str) -> dict:
+    """如果提审服风险分数超过阈值，则向飞书发送警报。"""
+    if not config.feishu_webhook_url:
+        return {"success": False, "error": "飞书 webhook 未配置（FEISHU_WEBHOOK_URL）"}
+
+    score = service.detect_leak(game_id, server_id, dt)
+    if score.level == "normal":
+        return {"success": True, "alert_sent": False, "message": "状态正常，无需告警"}
+
+    report = service.generate_report(game_id, server_id, dt)
+    game_name = service.repo.get_game(game_id).name
+    title = f"🚨 提审服泄漏预警 [{score.level.upper()}] - {game_name}"
+
+    from src.feishu import send_feishu_alert
+    success = send_feishu_alert(config.feishu_webhook_url, title, report)
+
+    return {
+        "success": success,
+        "alert_sent": True,
+        "level": score.level,
+        "score": score.total
+    }
+
+
+@mcp.tool()
 def get_leak_timeline(server_id: str, start_dt: str, end_dt: str) -> list[dict]:
     """获取多日趋势数据，用于分析泄漏演变。"""
     return service.get_timeline(server_id, start_dt, end_dt)
@@ -190,13 +215,33 @@ def _score_to_dict(score: LeakScore, server_id: str) -> dict:
 
 # ── ASGI 入口 ────────────────────────────────────────
 
-mcp_app = mcp.http_app("/mcp")
+# FastMCP 内部使用 starlette，我们可以创建自定义路由
+try:
+    from src.feishu_bot import FeishuBotHandler
+    feishu_handler = FeishuBotHandler(service, config)
 
+    # FastMCP 初始化后的 ASGI APP
+    mcp_app = mcp.http_app("/mcp")
+
+    # 注入飞书的 Webhook 端点
+    async def feishu_webhook(request):
+        body = await request.body()
+        res = await feishu_handler.handle_webhook(body, dict(request.headers), str(request.url))
+        from starlette.responses import JSONResponse
+        return JSONResponse(res, status_code=res.get("code", 200))
+
+    mcp_app.add_route("/feishu/webhook", feishu_webhook, methods=["POST"])
+except ImportError:
+    mcp_app = mcp.http_app("/mcp")
 
 # ── CLI 启动 ─────────────────────────────────────────
 
 def main():
-    mcp.run(transport="streamable-http", host=config.host, port=config.port)
+    import sys
+    if "--stdio" in sys.argv:
+        mcp.run(transport="stdio")
+    else:
+        mcp.run(transport="streamable-http", host=config.host, port=config.port)
 
 
 if __name__ == "__main__":

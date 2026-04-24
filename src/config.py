@@ -17,6 +17,15 @@ class Config:
     host: str = "127.0.0.1"
     port: int = 8000
 
+    # 飞书机器人 Webhook URL (用于报警)
+    feishu_webhook_url: str = ""
+
+    # 飞书 APP 配置 (用于接管消息事件)
+    feishu_app_id: str = ""
+    feishu_app_secret: str = ""
+    feishu_encrypt_key: str = ""
+    feishu_verification_token: str = ""
+
     # 评分阈值
     player_count_threshold: int = 20
 
@@ -42,6 +51,11 @@ class Config:
             db_path=os.getenv("DB_PATH", _DEFAULT_DB_PATH),
             host=os.getenv("MCP_HOST", "127.0.0.1"),
             port=int(os.getenv("MCP_PORT", "8000")),
+            feishu_webhook_url=os.getenv("FEISHU_WEBHOOK_URL", ""),
+            feishu_app_id=os.getenv("FEISHU_APP_ID", ""),
+            feishu_app_secret=os.getenv("FEISHU_APP_SECRET", ""),
+            feishu_encrypt_key=os.getenv("FEISHU_ENCRYPT_KEY", ""),
+            feishu_verification_token=os.getenv("FEISHU_VERIFICATION_TOKEN", ""),
             player_count_threshold=int(os.getenv("PLAYER_COUNT_THRESHOLD", "20")),
             seed_demo_data=os.getenv("SEED_DEMO_DATA", "").lower() in ("1", "true", "yes"),
         )
